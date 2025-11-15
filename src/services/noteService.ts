@@ -1,5 +1,6 @@
-import axios, { AxiosResponse } from 'axios';
-import { Note } from '../types/note';
+import axios from "axios";
+import type { AxiosResponse } from "axios";
+import type { Note } from "../types/note";
 
 const API_URL = 'https://notehub-public.goit.study/api/notes';
 const TOKEN = import.meta.env.VITE_NOTEHUB_TOKEN;
@@ -23,7 +24,9 @@ export interface FetchNotesResponse {
   currentPage: number;
 }
 
-export const fetchNotes = async (params: FetchNotesParams = {}): Promise<FetchNotesResponse> => {
+export const fetchNotes = async (
+  params: FetchNotesParams = {}
+): Promise<FetchNotesResponse> => {
   const response: AxiosResponse<FetchNotesResponse> = await axiosInstance.get('/', { params });
   return response.data;
 };
