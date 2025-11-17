@@ -1,43 +1,81 @@
-import { useState } from 'react';
-import NoteList from '../NoteList/NoteList';
-import Modal from '../Modal/Modal';
-import NoteForm from '../NoteForm/NoteForm';
-import SearchBox from '../SearchBox/SearchBox';
-import Pagination from '../Pagination/Pagination';
-import { useDebounce } from '../../hooks/useDebounce';
-import css from './App.module.css';
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchNotes, createNote } from "../../services/noteService";
+import NoteList from "../NoteList/NoteList";
+import Pagination from "../Pagination/Pagination";
+import SearchBox from "../SearchBox/SearchBox";
+import Modal from "../Modal/Modal";
+import NoteForm from "../NoteForm/NoteForm";
+import { useDebounce } from "../../hooks/useDebounce";
+import styles from "./App.module.css";
 
 export default function App() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 500);
 
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["notes", debouncedSearch, page],
+    queryFn: () => fetchNotes({ search: debouncedSearch, page, perPage: 12 }),
+    placeholderData: (prev) => prev,
+  });
+
+  const notes = data?.notes ?? [];
+  const totalPages = data?.totalPages ?? 1;
+
+  const handleSearch = (val: string) => {
+    setSearch(val);
+    setPage(1);
+  };
+
+  const handleCreateNote = async (noteData: {
+    title: string;
+    content: string;
+    tag: string;
+  }) => {
+    await createNote(noteData);
+
+    await queryClient.invalidateQueries({ queryKey: ["notes"] });
+
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className={css.app}>
-      <header className={css.toolbar}>
-        <SearchBox value={search} onChange={setSearch} />
+    <div className={styles.app}>
 
-        <div className={css.paginationWrapper}>
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        </div>
+      {}
+      <div className={styles.toolbar}>
+        <SearchBox value={search} onChange={handleSearch} />
 
-        <button className={css.button} onClick={() => setIsModalOpen(true)}>
+        <button
+          className={styles.button}
+          onClick={() => setIsModalOpen(true)}
+        >
           Create note +
         </button>
-      </header>
+      </div>
 
-      <NoteList
-        search={debouncedSearch}
+      {}
+      <Pagination
         page={page}
-        onTotalPagesChange={setTotalPages}
+        totalPages={totalPages}
+        onChange={setPage}
       />
 
+      {}
+      {isLoading && <p>Loading…</p>}
+      {!isLoading && notes.length === 0 && <p>No notes found</p>}
+
+      <NoteList notes={notes} />
+
+      {}
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onClose={() => setIsModalOpen(false)} />
+          <NoteForm onSubmit={handleCreateNote} />
         </Modal>
       )}
     </div>
