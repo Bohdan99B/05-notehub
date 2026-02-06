@@ -1,4 +1,5 @@
-import styles from "./Pagination.module.css";
+import ReactPaginate from 'react-paginate';
+import styles from './Pagination.module.css';
 
 interface PaginationProps {
   page: number;
@@ -6,30 +7,30 @@ interface PaginationProps {
   onChange: (p: number) => void;
 }
 
-export default function Pagination({ page, totalPages, onChange }: PaginationProps) {
+export default function Pagination({
+  page,
+  totalPages,
+  onChange,
+}: PaginationProps) {
   if (totalPages <= 1) return null;
 
-  const buttons = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const handlePageChange = ({ selected }: { selected: number }) => {
+    onChange(selected + 1);
+  };
 
   return (
-    <ul className={styles.pagination}>
-      <li onClick={() => onChange(Math.max(page - 1, 1))}>
-        <a>{"<"}</a>
-      </li>
-
-      {buttons.map(num => (
-        <li
-          key={num}
-          className={num === page ? styles.active : ""}
-          onClick={() => onChange(num)}
-        >
-          <a>{num}</a>
-        </li>
-      ))}
-
-      <li onClick={() => onChange(Math.min(page + 1, totalPages))}>
-        <a>{">"}</a>
-      </li>
-    </ul>
+    <ReactPaginate
+      containerClassName={styles.pagination}
+      activeClassName={styles.active}
+      previousLabel="<"
+      nextLabel=">"
+      breakLabel="..."
+      pageCount={totalPages}
+      marginPagesDisplayed={1}
+      pageRangeDisplayed={3}
+      onPageChange={handlePageChange}
+      forcePage={page - 1}
+      renderOnZeroPageCount={() => null}
+    />
   );
 }

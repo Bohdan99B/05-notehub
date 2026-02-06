@@ -1,65 +1,134 @@
-import { useState } from "react";
-import ErrorMessage from "../ErrorMessage/ErrorMessage";
-import styles from "./NoteForm.module.css";
+import type { MouseEvent } from 'react';
+import { ErrorMessage as FormikErrorMessage, Formik } from 'formik';
+import * as Yup from 'yup';
+import type { NoteTag } from '../../types/note';
+import styles from './NoteForm.module.css';
 
 interface NoteFormProps {
-  onSubmit: (data: { title: string; content: string; tag: string }) => void;
+  onSubmit: (data: NoteFormValues) => Promise<void> | void;
+  onCancel: () => void;
 }
 
-export default function NoteForm({ onSubmit }: NoteFormProps) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [tag, setTag] = useState("Todo");
-  const [errors, setErrors] = useState<{ title?: string; content?: string; tag?: string }>({});
+interface NoteFormValues {
+  title: string;
+  content: string;
+  tag: NoteTag;
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: typeof errors = {};
+const validationSchema = Yup.object({
+  title: Yup.string()
+    .min(3, 'Title must be at least 3 characters')
+    .max(50, 'Title must be at most 50 characters')
+    .required('Title is required'),
+  content: Yup.string().max(500, 'Content must be at most 500 characters'),
+  tag: Yup.mixed<NoteTag>()
+    .oneOf(['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'])
+    .required('Tag is required'),
+});
 
-    if (!title.trim()) newErrors.title = "Title is required";
-    if (!content.trim()) newErrors.content = "Content is required";
+const initialValues: NoteFormValues = {
+  title: '',
+  content: '',
+  tag: 'Todo',
+};
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
-    onSubmit({ title, content, tag });
+export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
+  const handleCancel = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    onCancel();
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
+    <Formik<NoteFormValues>
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={async (values, actions) => {
+        await onSubmit(values);
+        actions.resetForm();
+      }}
+    >
+      {({ values, handleChange, handleSubmit, isSubmitting }) => (
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="title">Title</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              className={styles.input}
+              value={values.title}
+              onChange={handleChange}
+            />
+            <FormikErrorMessage name="title">
+              {message => (
+                <span name="title" className={styles.error}>
+                  {message}
+                </span>
+              )}
+            </FormikErrorMessage>
+          </div>
 
-      <div className={styles.formGroup}>
-        <label>Title</label>
-        <input className={styles.input} value={title} onChange={e => setTitle(e.target.value)} />
-        {errors.title && <ErrorMessage message={errors.title} />}
-      </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="content">Content</label>
+            <textarea
+              id="content"
+              name="content"
+              rows={8}
+              className={styles.textarea}
+              value={values.content}
+              onChange={handleChange}
+            />
+            <FormikErrorMessage name="content">
+              {message => (
+                <span name="content" className={styles.error}>
+                  {message}
+                </span>
+              )}
+            </FormikErrorMessage>
+          </div>
 
-      <div className={styles.formGroup}>
-        <label>Content</label>
-        <textarea className={styles.textarea} value={content} onChange={e => setContent(e.target.value)} />
-        {errors.content && <ErrorMessage message={errors.content} />}
-      </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="tag">Tag</label>
+            <select
+              id="tag"
+              name="tag"
+              className={styles.select}
+              value={values.tag}
+              onChange={handleChange}
+            >
+              <option value="Todo">Todo</option>
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Shopping">Shopping</option>
+            </select>
+            <FormikErrorMessage name="tag">
+              {message => (
+                <span name="tag" className={styles.error}>
+                  {message}
+                </span>
+              )}
+            </FormikErrorMessage>
+          </div>
 
-      <div className={styles.formGroup}>
-        <label>Tag</label>
-        <select className={styles.select} value={tag} onChange={e => setTag(e.target.value)}>
-          <option value="Todo">Todo</option>
-          <option value="Work">Work</option>
-          <option value="Personal">Personal</option>
-          <option value="Shopping">Shopping</option>
-        </select>
-      </div>
-
-      <div className={styles.actions}>
-        <button type="button" className={styles.cancelButton} onClick={() => history.back()}>
-          Cancel
-        </button>
-
-        <button type="submit" className={styles.submitButton}>
-          Create note
-        </button>
-      </div>
-
-    </form>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={handleCancel}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting}
+            >
+              Create note
+            </button>
+          </div>
+        </form>
+      )}
+    </Formik>
   );
 }
