@@ -1,4 +1,5 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { AxiosResponse } from 'axios';
 import type { Note, NoteTag } from '../types/note';
 
 const API_ROOT = 'https://notehub-public.goit.study/api';

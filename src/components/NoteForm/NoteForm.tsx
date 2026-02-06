@@ -60,11 +60,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               onChange={handleChange}
             />
             <FormikErrorMessage name="title">
-              {message => (
-                <span name="title" className={styles.error}>
-                  {message}
-                </span>
-              )}
+              {message => <span className={styles.error}>{message}</span>}
             </FormikErrorMessage>
           </div>
 
@@ -79,11 +75,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               onChange={handleChange}
             />
             <FormikErrorMessage name="content">
-              {message => (
-                <span name="content" className={styles.error}>
-                  {message}
-                </span>
-              )}
+              {message => <span className={styles.error}>{message}</span>}
             </FormikErrorMessage>
           </div>
 
@@ -103,11 +95,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               <option value="Shopping">Shopping</option>
             </select>
             <FormikErrorMessage name="tag">
-              {message => (
-                <span name="tag" className={styles.error}>
-                  {message}
-                </span>
-              )}
+              {message => <span className={styles.error}>{message}</span>}
             </FormikErrorMessage>
           </div>
 
